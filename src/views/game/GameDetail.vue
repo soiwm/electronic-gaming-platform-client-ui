@@ -1,0 +1,227 @@
+<template>
+  <PageContainer>
+    <div class="game-detail" v-if="gameDetail">
+      <div class="game-detail__header">
+        <div class="game-image">
+          <img :src="gameDetail.imageUrl || '/default-game.jpg'" alt="gameDetail.name">
+        </div>
+        <div class="game-info">
+          <h1>{{ gameDetail.name }}</h1>
+          <div class="game-meta">
+            <span class="game-type">{{ gameDetail.type }}</span>
+            <span class="game-release">发布日期: {{ gameDetail.releaseDate || '未知' }}</span>
+          </div>
+          <div class="game-price">¥{{ gameDetail.price.toFixed(2) }}</div>
+          <button class="btn btn-primary buy-btn" @click="handleBuy">立即购买</button>
+        </div>
+      </div>
+
+      <div class="game-detail__content">
+        <h2>游戏介绍</h2>
+        <div class="game-description">
+          {{ gameDetail.description || '暂无详细介绍' }}
+        </div>
+
+        <h2>游戏特点</h2>
+        <ul class="game-features" v-if="gameDetail.features && gameDetail.features.length">
+          <li v-for="(feature, index) in gameDetail.features" :key="index">
+            <font-awesome-icon icon="check-circle" class="feature-icon" />
+            {{ feature }}
+          </li>
+        </ul>
+        <div v-else class="no-features">暂无游戏特点信息</div>
+      </div>
+    </div>
+
+    <div class="loading-state" v-else>
+      <el-loading :visible="true" text="加载中..."></el-loading>
+    </div>
+
+    <!-- 购买确认弹窗 -->
+    <el-dialog title="确认购买" v-model="buyDialogVisible" width="400px">
+      <p>您确定要购买 {{ gameDetail?.name }} 吗？</p>
+      <p class="dialog-price">价格: ¥{{ gameDetail?.price.toFixed(2) }}</p>
+      <template #footer>
+        <el-button @click="buyDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmPurchase">确认购买</el-button>
+      </template>
+    </el-dialog>
+  </PageContainer>
+</template>
+
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { ElMessage, ElLoading } from 'element-plus'
+import PageContainer from '@/components/common/PageContainer.vue'
+import { getGameDetail } from '@/api/game.js'
+import { createOrder } from '@/api/order.js'
+
+// 路由相关
+const route = useRoute()
+const router = useRouter()
+const gameId = route.params.id
+
+// 游戏详情数据
+const gameDetail = ref(null)
+// 购买弹窗显示状态
+const buyDialogVisible = ref(false)
+
+// 获取游戏详情
+const loadGameDetail = async () => {
+  const loading = ElLoading.service({ text: '加载中...' })
+  try {
+    const res = await getGameDetail(gameId)
+    gameDetail.value = res.data
+  } catch (error) {
+    ElMessage.error('获取游戏详情失败：' + error.message)
+  } finally {
+    loading.close()
+  }
+}
+
+// 打开购买弹窗
+const handleBuy = () => {
+  buyDialogVisible.value = true
+}
+
+// 确认购买
+const confirmPurchase = async () => {
+  try {
+    const orderData = {
+      gameId: gameDetail.value.id,
+      gameName: gameDetail.value.name,
+      price: gameDetail.value.price
+    }
+    await createOrder(orderData)
+    ElMessage.success('购买成功！')
+    buyDialogVisible.value = false
+    // 跳转到订单列表
+    router.push('/orders')
+  } catch (error) {
+    ElMessage.error('购买失败：' + error.message)
+  }
+}
+
+onMounted(() => {
+  loadGameDetail()
+})
+</script>
+
+<style scoped>
+.game-detail__header {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.game-image {
+  width: 400px;
+  height: 250px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.game-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.game-info {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-info h1 {
+  font-size: 28px;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+.game-meta {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+  color: #666;
+}
+
+.game-type {
+  background-color: #e6f4ff;
+  color: #1989fa;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.game-price {
+  font-size: 24px;
+  font-weight: 600;
+  color: #f56c6c;
+  margin-bottom: 24px;
+}
+
+.buy-btn {
+  align-self: flex-start;
+  padding: 10px 24px;
+  font-size: 16px;
+}
+
+.game-detail__content {
+  color: #333;
+}
+
+.game-detail__content h2 {
+  font-size: 20px;
+  margin: 24px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #eee;
+  color: #1989fa;
+}
+
+.game-description {
+  line-height: 1.8;
+  color: #666;
+}
+
+.game-features {
+  padding-left: 20px;
+}
+
+.game-features li {
+  list-style: none;
+  margin-bottom: 12px;
+  line-height: 1.6;
+  position: relative;
+  padding-left: 24px;
+}
+
+.feature-icon {
+  color: #36d399;
+  position: absolute;
+  left: 0;
+}
+
+.no-features {
+  color: #999;
+  padding: 10px 0;
+}
+
+.loading-state {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-price {
+  color: #f56c6c;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 10px 0;
+}
+</style>
