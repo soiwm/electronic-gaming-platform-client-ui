@@ -1,7 +1,8 @@
 // vue.config.js 正确配置（Vue CLI 项目）
 module.exports = {
   devServer: {
-    port: 8081, // 客户端运行端口（避免和后端冲突）
+    port: 7070, // 客户端运行端口（避免和后端冲突）
+    open: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8080', // 管理端后端地址

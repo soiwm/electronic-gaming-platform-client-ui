@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getToken, clearToken, isTokenExpired } from './auth';
 
 // 创建 axios 实例
 const service = axios.create({
@@ -9,10 +10,12 @@ const service = axios.create({
 // 请求拦截器
 service.interceptors.request.use(
   (config) => {
-    // 添加用户令牌
-    const token = localStorage.getItem('token')
-    if (token) {
+    // 添加用户令牌并在客户端侧做过期兜底
+    const token = getToken()
+    if (token && !isTokenExpired(token)) {
       config.headers['Authorization'] = 'Bearer ' + token
+    } else if (token && isTokenExpired(token)) {
+      clearToken()
     }
     return config;
   },
@@ -30,6 +33,10 @@ service.interceptors.response.use(
     return res;
   },
   (error) => {
+    if (error?.response?.status === 401) {
+      clearToken()
+      // 统一抛出 401，让页面侧决定跳转
+    }
     console.error('网络错误：', error.message);
     return Promise.reject(error);
   }
