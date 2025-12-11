@@ -3,8 +3,8 @@
     <el-card class="login-card">
       <h2 class="title">登录电子游戏平台</h2>
       <el-form :model="form" :rules="rules" ref="formRef" label-position="top">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="输入用户名" autocomplete="username" />
+        <el-form-item label="手机号" prop="phone">
+          <el-input v-model="form.phone" placeholder="输入手机号" autocomplete="phone" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input
@@ -37,12 +37,15 @@ const route = useRoute()
 const formRef = ref(null)
 const loading = ref(false)
 const form = reactive({
-  username: '',
+  phone: '',
   password: ''
 })
 
 const rules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  phone: [
+    { required: true, message: '请输入手机号', trigger: 'blur' },
+    { pattern: /^1[3-9]\d{9}$/, message: '请输入有效的手机号', trigger: 'blur' }
+  ],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 

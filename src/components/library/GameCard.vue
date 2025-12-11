@@ -8,7 +8,8 @@
   >
     <div 
       class="game-card-image"
-      :style="{ backgroundImage: `url(${game.imageUrl || '/default-game.jpg'})` }"
+      :style="{ backgroundImage: `url(${getGameLogoUrl(game.logo)})` }"
+      @error.once="handleImageError"
     >
       <div class="game-card-overlay">
         <h3 class="game-card-title">{{ game.name }}</h3>
@@ -52,6 +53,31 @@ const props = defineProps({
 
 // 定义事件
 const emit = defineEmits(['launch', 'details', 'uninstall', 'click'])
+
+// 获取游戏logo URL：仅做最小规则，避免拼错路径
+const getGameLogoUrl = (logo) => {
+  // 无值用默认图（放在 public/images/game/ 下）
+  if (!logo) return '/images/game/default-game.svg'
+
+  // 完整 URL 直接返回
+  if (/^https?:\/\//i.test(logo)) return logo
+
+  // 以 / 开头：认为后端可直接访问的静态路径（走同域或 dev 代理）
+  if (logo.startsWith('/')) return logo
+  
+  // 如果已经包含images/game路径，直接使用
+  if (logo.includes('images/game/')) {
+    return logo
+  }
+
+  // 仅文件名：补上后端静态前缀
+  return `/images/game/${logo}`
+}
+
+// 处理图片加载错误
+const handleImageError = (event) => {
+  event.target.style.backgroundImage = `url('/images/game/default-game.svg')`
+}
 
 // 格式化日期
 const formatDate = (dateString) => {

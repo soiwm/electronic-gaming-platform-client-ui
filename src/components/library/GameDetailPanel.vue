@@ -2,9 +2,10 @@
   <div :class="['library-detail-panel', { 'panel-hidden': !selectedGame }]">
     <div v-if="selectedGame" class="game-detail-header">
       <img 
-        :src="selectedGame.imageUrl || '/default-game.jpg'" 
-        alt="selectedGame.name"
+        :src="getGameLogoUrl(selectedGame.logo)" 
+        :alt="selectedGame.name"
         class="game-detail-cover"
+        @error.once="handleImageError"
       >
       <h2 class="game-detail-title">{{ selectedGame.name }}</h2>
       <div class="game-detail-meta">
@@ -82,6 +83,34 @@ const props = defineProps({
 
 // 定义事件
 const emit = defineEmits(['launch', 'details'])
+
+// 获取游戏logo URL：仅做最小规则，避免拼错路径
+const getGameLogoUrl = (logo) => {
+  // 无值用默认图（放在 public/images/game/ 下）
+  if (!logo) return '/images/game/default-game.svg'
+
+  // 完整 URL 直接返回
+  if (/^https?:\/\//i.test(logo)) return logo
+
+  // 以 / 开头：认为后端可直接访问的静态路径（走同域或 dev 代理）
+  if (logo.startsWith('/')) return logo
+  
+  // 如果已经包含images/game路径，直接使用
+  if (logo.includes('images/game/')) {
+    return logo
+  }
+
+  // 仅文件名：补上后端静态前缀
+  return `/images/game/${logo}`
+}
+
+// 处理图片加载错误
+const handleImageError = (e) => {
+  // 防止无限循环，只设置一次默认图片
+  if (!e.target.src.includes('default-game.svg')) {
+    e.target.src = '/images/game/default-game.svg'
+  }
+}
 
 // 格式化日期
 const formatDate = (dateString) => {

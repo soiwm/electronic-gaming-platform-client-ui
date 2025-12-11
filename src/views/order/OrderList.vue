@@ -5,22 +5,22 @@
     <div class="order-list" v-if="orderList.length > 0">
       <div class="order-item" v-for="order in orderList" :key="order.id">
         <div class="order-header">
-          <div class="order-id">订单编号: {{ order.orderNo }}</div>
+          <div class="order-id">订单编号: {{ order.id }}</div>
           <div class="order-date">下单时间: {{ formatDate(order.createTime) }}</div>
           <div class="order-status" :class="statusClass(order.status)">
-            {{ order.status === 1 ? '已完成' : '待支付' }}
+            {{ '已完成' }}
           </div>
         </div>
         <div class="order-body">
           <div class="game-info">
             <div class="game-thumbnail">
-              <img :src="order.gameImage || '/default-game.jpg'" alt="order.gameName">
+              <img :src="getGameLogoUrl(order.gameImage)" :alt="order.gameName" @error.once="handleImageError">
             </div>
             <div class="game-name">{{ order.gameName }}</div>
           </div>
           <div class="order-amount">
             <span class="amount-label">订单金额:</span>
-            <span class="amount-value">¥{{ order.price.toFixed(2) }}</span>
+            <span class="amount-value">¥{{ order.amount ? order.amount.toFixed(2) : '0.00' }}</span>
           </div>
         </div>
       </div>
@@ -63,9 +63,39 @@ const formatDate = (dateString) => {
   return date.toLocaleString()
 }
 
+// 获取游戏logo URL
+const getGameLogoUrl = (logo) => {
+  if (!logo) {
+    return '/images/game/default-game.svg'
+  }
+  
+  // 如果是完整的URL，直接返回
+  if (logo.startsWith('http://') || logo.startsWith('https://')) {
+    return logo
+  }
+  
+  // 如果是以/开头的路径，直接使用
+  if (logo.startsWith('/')) {
+    return logo
+  }
+  
+  // 如果已经包含images/game路径，直接使用
+  if (logo.includes('images/game/')) {
+    return logo
+  }
+  
+  // 否则，添加/images/game/前缀
+  return `/images/game/${logo}`
+}
+
+// 处理图片加载错误
+const handleImageError = (event) => {
+  event.target.src = '/images/game/default-game.svg'
+}
+
 // 订单状态样式
-const statusClass = (status) => {
-  return status === 1 ? 'status-completed' : 'status-pending'
+const statusClass = () => {
+  return 'status-completed'
 }
 
 onMounted(() => {

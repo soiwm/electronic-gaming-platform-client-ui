@@ -16,7 +16,7 @@
           @click="$router.push(`/games/${game.id}`)"
         >
           <div class="game-image">
-            <img :src="game.imageUrl || '/default-game.jpg'" alt="game.name">
+            <img :src="getGameLogoUrl(game.logo)" :alt="game.name" @error.once="handleImageError">
           </div>
           <h3>{{ game.name }}</h3>
           <div class="game-info">
@@ -35,6 +35,32 @@ import PageContainer from '@/components/common/PageContainer.vue'
 import { getGameList } from '@/api/game.js'
 
 const featuredGames = ref([])
+
+const getGameLogoUrl = (logo) => {
+  // 无值用默认图（放在 public/images/game/ 下）
+  if (!logo) return '/images/game/default-game.svg'
+
+  // 完整 URL 直接返回
+  if (/^https?:\/\//i.test(logo)) return logo
+
+  // 以 / 开头：认为后端可直接访问的静态路径（走同域或 dev 代理）
+  if (logo.startsWith('/')) return logo
+  
+  // 如果已经包含images/game路径，直接使用
+  if (logo.includes('images/game/')) {
+    return logo
+  }
+
+  // 仅文件名：补上后端静态前缀
+  return `/images/game/${logo}`
+}
+
+const handleImageError = (e) => {
+  // 防止无限循环，只设置一次默认图片
+  if (!e.target.src.includes('default-game.svg')) {
+    e.target.src = '/images/game/default-game.svg'
+  }
+}
 
 const getFeaturedGames = async () => {
   try {

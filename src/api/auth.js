@@ -1,12 +1,10 @@
 import request from '@/utils/request';
 
-// 登录获取 JWT
+// 客户登录获取 JWT
 export function login(data) {
   return request({
-    url: '/api/auth/login',
+    url: '/api/auth/customer/login',
     method: 'post',
     data
   });
 }
-
-
