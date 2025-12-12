@@ -21,13 +21,28 @@
     </div>
     <div class="game-card-content">
       <div class="game-card-actions">
-        <button class="game-btn launch-btn" @click.stop="handleLaunch">
+        <button 
+          v-if="game.installed" 
+          class="game-btn launch-btn" 
+          @click.stop="handleLaunch"
+        >
           <font-awesome-icon icon="play" /> 启动游戏
+        </button>
+        <button 
+          v-else 
+          class="game-btn install-btn" 
+          @click.stop="handleInstall"
+        >
+          <font-awesome-icon icon="download" /> 安装
         </button>
         <button class="game-btn details-btn" @click.stop="handleDetails">
           <font-awesome-icon icon="info-circle" /> 详情
         </button>
-        <button class="game-btn uninstall-btn" @click.stop="handleUninstall">
+        <button 
+          v-if="game.installed" 
+          class="game-btn uninstall-btn" 
+          @click.stop="handleUninstall"
+        >
           <font-awesome-icon icon="trash" /> 卸载
         </button>
       </div>
@@ -52,7 +67,7 @@ const props = defineProps({
 })
 
 // 定义事件
-const emit = defineEmits(['launch', 'details', 'uninstall', 'click'])
+const emit = defineEmits(['launch', 'details', 'uninstall', 'install', 'click'])
 
 // 获取游戏logo URL：仅做最小规则，避免拼错路径
 const getGameLogoUrl = (logo) => {
@@ -91,6 +106,11 @@ const handleCardClick = () => {
   emit('click', props.game)
 }
 
+// 安装游戏
+const handleInstall = () => {
+  emit('install', props.game.id)
+}
+
 // 启动游戏
 const handleLaunch = () => {
   emit('launch', props.game.id)
@@ -106,3 +126,133 @@ const handleUninstall = () => {
   emit('uninstall', props.game.id)
 }
 </script>
+
+<style scoped>
+.game-card {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  background-color: #1a1a1a;
+}
+
+.game-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.game-card-grid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.game-card-list {
+  display: flex;
+  flex-direction: row;
+  height: 120px;
+}
+
+.game-card-image {
+  position: relative;
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+  background-color: #2a2a2a;
+}
+
+.game-card-list .game-card-image {
+  width: 200px;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.game-card-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding: 15px;
+  color: white;
+}
+
+.game-card-title {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  font-weight: bold;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.game-card-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.game-card-content {
+  padding: 15px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.game-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.game-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.launch-btn {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.launch-btn:hover {
+  background-color: #45a049;
+}
+
+.install-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.install-btn:hover {
+  background-color: #0b7dda;
+}
+
+.details-btn {
+  background-color: #555;
+  color: white;
+}
+
+.details-btn:hover {
+  background-color: #444;
+}
+
+.uninstall-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.uninstall-btn:hover {
+  background-color: #d32f2f;
+}
+</style>

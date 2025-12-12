@@ -12,7 +12,20 @@
             <span class="game-release">发布日期: {{ gameDetail.releaseDate || '未知' }}</span>
           </div>
           <div class="game-price">¥{{ gameDetail.price.toFixed(2) }}</div>
-          <button class="btn btn-primary buy-btn" @click="handleBuy">立即购买</button>
+          <button 
+            v-if="isPurchased" 
+            class="btn btn-disabled purchased-btn" 
+            disabled
+          >
+            已购买
+          </button>
+          <button 
+            v-else 
+            class="btn btn-primary buy-btn" 
+            @click="handleBuy"
+          >
+            立即购买
+          </button>
         </div>
       </div>
 
@@ -56,6 +69,7 @@ import { ElMessage, ElLoading } from 'element-plus'
 import PageContainer from '@/components/common/PageContainer.vue'
 import { getGameDetail } from '@/api/game.js'
 import { createOrder } from '@/api/order.js'
+import { checkUserPurchasedGame } from '@/api/userGameLibrary.js'
 
 // 路由相关
 const route = useRoute()
@@ -66,6 +80,8 @@ const gameId = route.params.id
 const gameDetail = ref(null)
 // 购买弹窗显示状态
 const buyDialogVisible = ref(false)
+// 是否已购买游戏
+const isPurchased = ref(false)
 
 // 获取游戏logo URL：仅做最小规则，避免拼错路径
 const getGameLogoUrl = (logo) => {
@@ -101,10 +117,25 @@ const loadGameDetail = async () => {
   try {
     const res = await getGameDetail(gameId)
     gameDetail.value = res.data
+    
+    // 检查用户是否已购买该游戏
+    await checkPurchaseStatus()
   } catch (error) {
     ElMessage.error('获取游戏详情失败：' + error.message)
   } finally {
     loading.close()
+  }
+}
+
+// 检查用户是否已购买游戏
+const checkPurchaseStatus = async () => {
+  try {
+    const res = await checkUserPurchasedGame(gameId)
+    isPurchased.value = res.data
+  } catch (error) {
+    console.error('检查购买状态失败：', error)
+    // 如果检查失败，默认设置为未购买
+    isPurchased.value = false
   }
 }
 
@@ -117,13 +148,15 @@ const handleBuy = () => {
 const confirmPurchase = async () => {
   try {
     const orderData = {
-      gameId: gameDetail.value.id,
-      gameName: gameDetail.value.name,
-      price: gameDetail.value.price
+      gameId: gameDetail.value.id
     }
     await createOrder(orderData)
     ElMessage.success('购买成功！')
     buyDialogVisible.value = false
+    
+    // 更新购买状态
+    isPurchased.value = true
+    
     // 跳转到订单列表
     router.push('/orders')
   } catch (error) {
@@ -197,6 +230,15 @@ onMounted(() => {
   align-self: flex-start;
   padding: 10px 24px;
   font-size: 16px;
+}
+
+.purchased-btn {
+  align-self: flex-start;
+  padding: 10px 24px;
+  font-size: 16px;
+  background-color: #e4e7ed;
+  color: #909399;
+  cursor: not-allowed;
 }
 
 .game-detail__content {

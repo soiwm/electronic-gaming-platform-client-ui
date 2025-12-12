@@ -38,6 +38,7 @@
           @launch="handleLaunchGame"
           @details="handleGameDetails"
           @uninstall="handleUninstallGame"
+          @install="handleInstallGame"
           @click="setSelectedGame(game)"
         />
       </div>
@@ -63,6 +64,7 @@
       :selected-game="selectedGame"
       @launch="handleLaunchGame"
       @details="handleGameDetails"
+      @toggle-favorite="handleToggleFavorite"
     />
   </div>
 </template>
@@ -74,7 +76,7 @@ import { ElMessage, ElLoading } from 'element-plus'
 import LibrarySidebar from '@/components/library/LibrarySidebar.vue'
 import GameCard from '@/components/library/GameCard.vue'
 import GameDetailPanel from '@/components/library/GameDetailPanel.vue'
-import { getUserLibrary, launchGame, uninstallGame } from '@/api/library.js'
+import { getUserLibrary, launchGame, installGame, uninstallGame, toggleFavorite } from '@/api/library.js'
 
 // 路由
 const router = useRouter()
@@ -97,15 +99,18 @@ const loadLibraryGames = async () => {
   
   try {
     const res = await getUserLibrary()
-    // 模拟添加一些额外字段（实际应从接口返回）
+    // 直接使用后端返回的数据，包括安装和收藏状态
     libraryGames.value = res.data.map(game => ({
       ...game,
+      // 将后端返回的0/1转换为布尔值，方便前端使用
+      installed: game.installed === 1,
+      favorite: game.favorite === 1,
+      // 使用后端返回的购买时间，如果没有则使用当前时间
+      purchaseDate: game.purchaseTime || new Date().toISOString(),
+      // 添加一些额外的模拟数据，实际应用中应从接口返回
       playTime: Math.floor(Math.random() * 100), // 游玩小时数
       achievements: Math.floor(Math.random() * 50), // 成就数
-      lastPlayed: Math.random() > 0.5, // 是否最近游玩
-      installed: Math.random() > 0.3, // 是否安装
-      favorite: Math.random() > 0.7, // 是否收藏
-      purchaseDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString() // 购买日期
+      lastPlayed: Math.random() > 0.5 // 是否最近游玩
     }))
   } catch (error) {
     ElMessage.error('加载游戏库失败：' + error.message)
@@ -120,9 +125,7 @@ const filteredGames = computed(() => {
   return libraryGames.value.filter(game => {
     // 分类过滤
     let categoryMatch = true
-    if (activeCategory.value === 'recent') {
-      categoryMatch = game.lastPlayed
-    } else if (activeCategory.value === 'favorite') {
+    if (activeCategory.value === 'favorite') {
       categoryMatch = game.favorite
     } else if (activeCategory.value === 'installed') {
       categoryMatch = game.installed
@@ -167,14 +170,68 @@ const handleGameDetails = (gameId) => {
   router.push(`/games/${gameId}`)
 }
 
+// 切换收藏状态
+const handleToggleFavorite = async (gameId) => {
+  try {
+    await toggleFavorite(gameId)
+    const game = libraryGames.value.find(g => g.id === gameId)
+    if (!game) {
+      ElMessage.error('游戏不存在')
+      return
+    }
+    
+    // 切换收藏状态
+    const gameIndex = libraryGames.value.findIndex(g => g.id === gameId)
+    if (gameIndex !== -1) {
+      libraryGames.value[gameIndex].favorite = !libraryGames.value[gameIndex].favorite
+      const action = libraryGames.value[gameIndex].favorite ? '收藏' : '取消收藏'
+      ElMessage.success(`已${action}《${game.name}》`)
+      
+      // 如果当前选中的游戏被修改，更新选中状态
+      if (selectedGame.value?.id === gameId) {
+        selectedGame.value.favorite = libraryGames.value[gameIndex].favorite
+      }
+    }
+  } catch (error) {
+    ElMessage.error('操作失败：' + error.message)
+  }
+}
+
+// 安装游戏
+const handleInstallGame = async (gameId) => {
+  try {
+    await installGame(gameId)
+    const game = libraryGames.value.find(g => g.id === gameId)
+    if (!game) {
+      ElMessage.error('游戏不存在')
+      return
+    }
+    
+    // 更新游戏状态为已安装
+    const gameIndex = libraryGames.value.findIndex(g => g.id === gameId)
+    if (gameIndex !== -1) {
+      libraryGames.value[gameIndex].installed = true
+      ElMessage.success(`《${game.name}》安装成功`)
+    }
+  } catch (error) {
+    ElMessage.error('安装游戏失败：' + error.message)
+  }
+}
+
 // 卸载游戏
 const handleUninstallGame = async (gameId) => {
   try {
     await uninstallGame(gameId)
+    const game = libraryGames.value.find(g => g.id === gameId)
+    if (!game) {
+      ElMessage.error('游戏不存在')
+      return
+    }
+    
     const gameIndex = libraryGames.value.findIndex(g => g.id === gameId)
     if (gameIndex !== -1) {
       libraryGames.value[gameIndex].installed = false
-      ElMessage.success('游戏卸载成功')
+      ElMessage.success(`《${game.name}》卸载成功`)
       // 如果卸载的是当前选中的游戏，清空选中状态
       if (selectedGame.value?.id === gameId) {
         selectedGame.value = null

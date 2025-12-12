@@ -11,12 +11,6 @@
           </a>
         </li>
         <li>
-          <a :class="{ active: activeCategory === 'recent' }" @click="setCategory('recent')">
-            <font-awesome-icon icon="clock" class="icon" />
-            <span>最近游玩</span>
-          </a>
-        </li>
-        <li>
           <a :class="{ active: activeCategory === 'favorite' }" @click="setCategory('favorite')">
             <font-awesome-icon icon="star" class="icon" />
             <span>已收藏</span>

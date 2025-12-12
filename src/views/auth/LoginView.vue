@@ -56,17 +56,21 @@ const handleLogin = () => {
     loading.value = true
     try {
       const res = await login({ ...form })
+      console.log('登录响应:', res)
       // 假设后端返回 { code: 200, data: { token } }
       const token = res?.data?.token
+      console.log('提取的token:', token)
       if (!token) {
         ElMessage.error('未获取到令牌')
         return
       }
       setToken(token)
+      console.log('token已保存到localStorage')
       ElMessage.success('登录成功')
       const redirect = route.query.redirect || '/'
       router.replace(redirect)
     } catch (e) {
+      console.error('登录错误:', e)
       ElMessage.error(e?.msg || e?.message || '登录失败')
     } finally {
       loading.value = false

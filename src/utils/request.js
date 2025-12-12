@@ -12,10 +12,16 @@ service.interceptors.request.use(
   (config) => {
     // 添加用户令牌并在客户端侧做过期兜底
     const token = getToken()
+    console.log('请求拦截器 - 请求URL:', config.url)
+    console.log('请求拦截器 - 获取的token:', token)
     if (token && !isTokenExpired(token)) {
       config.headers['Authorization'] = 'Bearer ' + token
+      console.log('请求拦截器 - 已添加Authorization头:', config.headers['Authorization'])
     } else if (token && isTokenExpired(token)) {
+      console.log('请求拦截器 - token已过期，清除token')
       clearToken()
+    } else {
+      console.log('请求拦截器 - 没有有效的token')
     }
     return config;
   },

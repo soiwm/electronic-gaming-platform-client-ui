@@ -49,9 +49,13 @@ const orderList = ref([])
 // 加载订单列表
 const loadOrders = async () => {
   try {
+    console.log('开始加载订单列表')
     const res = await getUserOrders()
-    orderList.value = res.data
+    console.log('获取订单响应:', res)
+    orderList.value = res.data || []
+    console.log('订单列表已更新:', orderList.value)
   } catch (error) {
+    console.error('获取订单列表失败:', error)
     ElMessage.error('获取订单列表失败：' + error.message)
   }
 }
