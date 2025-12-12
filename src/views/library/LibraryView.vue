@@ -3,9 +3,7 @@
     <!-- 左侧侧边栏 -->
     <LibrarySidebar 
       :active-category="activeCategory"
-      :active-genre="activeGenre"
       @change-category="handleCategoryChange"
-      @change-genre="handleGenreChange"
     />
 
     <!-- 中间游戏列表区域 -->
@@ -86,7 +84,6 @@ const loading = ref(false)
 const libraryGames = ref([])
 const viewMode = ref('grid') // grid/list
 const activeCategory = ref('all')
-const activeGenre = ref('')
 const selectedGame = ref(null)
 
 // 获取游戏库数据
@@ -131,19 +128,7 @@ const filteredGames = computed(() => {
       categoryMatch = game.installed
     }
 
-    // 类型过滤
-    let genreMatch = true
-    if (activeGenre.value) {
-      const genreMap = {
-        'moba': 'MOBA',
-        'shooter': '射击',
-        'rpg': '角色扮演',
-        'strategy': '策略'
-      }
-      genreMatch = game.type === genreMap[activeGenre.value]
-    }
-
-    return categoryMatch && genreMatch
+    return categoryMatch
   })
 })
 
@@ -152,14 +137,9 @@ const setViewMode = (mode) => {
   viewMode.value = mode
 }
 
-// 切换分类
+// 处理分类变化
 const handleCategoryChange = (category) => {
   activeCategory.value = category
-}
-
-// 切换游戏类型
-const handleGenreChange = (genre) => {
-  activeGenre.value = genre
 }
 
 // 选择游戏（显示详情面板）
