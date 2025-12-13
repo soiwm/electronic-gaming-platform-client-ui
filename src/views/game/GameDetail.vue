@@ -69,7 +69,7 @@ import { ElMessage, ElLoading } from 'element-plus'
 import PageContainer from '@/components/common/PageContainer.vue'
 import { getGameDetail } from '@/api/game.js'
 import { createOrder } from '@/api/order.js'
-import { checkUserPurchasedGame } from '@/api/userGameLibrary.js'
+import { checkUserPurchasedGame } from '@/api/library.js'
 
 // 路由相关
 const route = useRoute()

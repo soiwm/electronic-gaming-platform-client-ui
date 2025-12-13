@@ -105,8 +105,8 @@ const loadLibraryGames = async () => {
       // 将后端返回的0/1转换为布尔值，方便前端使用
       installed: game.installed === 1,
       favorite: game.favorite === 1,
-      // 使用后端返回的购买时间，如果没有则使用当前时间
-      purchaseDate: game.purchaseTime || new Date().toISOString(),
+      // 使用后端返回的购买时间
+      purchaseDate: game.purchaseTime,
       // 添加一些额外的模拟数据，实际应用中应从接口返回
       playTime: Math.floor(Math.random() * 100), // 游玩小时数
       achievements: Math.floor(Math.random() * 50), // 成就数
